@@ -9,38 +9,44 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-public class ConsoleParser implements Runnable {
+import static java.util.Arrays.asList;
+
+public class ConsoleParser {
 
     private static final Logger log = LogManager.getLogger(ConsoleParser.class);
 
-    private final TopicalMessageReceiver receiver;
+    private final List<TopicalMessageReceiver> receivers;
 
     private final Map<String, LocalDateTime> lastDataMap = new HashMap<>();
     private static final DateTimeFormatter PATTERN =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    public ConsoleParser(TopicalMessageReceiver receiver) {
-        this.receiver = receiver;
+    public ConsoleParser(TopicalMessageReceiver... receivers) {
+        this.receivers = asList(receivers);
     }
 
-    @Override
-    public void run() {
+    public void start() {
         Scanner console = new Scanner(System.in);
+        log.debug("Parsing input!");
         while (console.hasNextLine()) {
             String message = console.nextLine();
             TopicalMessage topicalMessage = parse(message);
             if (topicalMessage != null) {
-                receiver.consume(topicalMessage);
+                for (TopicalMessageReceiver receiver : receivers) {
+                    receiver.consume(topicalMessage);
+                }
             }
         }
+        log.debug("Finished parsing!");
     }
 
     public TopicalMessage parse(String message) {
         JSONObject jo;
-        LocalDateTime time = LocalDateTime.MIN;
+        LocalDateTime time = null;
         LocalDateTime prevTime;
         String model = "unknown";
 
@@ -49,9 +55,9 @@ public class ConsoleParser implements Runnable {
             model = jo.getString("model");
             time = LocalDateTime.from(PATTERN.parse(jo.getString("time")));
         } catch (JSONException e) {
-            log.warn("Message did not contain valid JSON and/or \"model\" and \"time\" "
-                    + "parameters");
-            log.debug("Caught exception: ", e);
+            log.debug("Message did not contain valid JSON and/or \"model\" and \"time\" "
+                    + "parameters. Converting to JSON.");
+            log.trace("Caught exception: ", e);
 
             jo = new JSONObject();
             jo.put("message", message);
@@ -59,7 +65,8 @@ public class ConsoleParser implements Runnable {
         }
 
         prevTime = lastDataMap.get(model);
-        if (prevTime != null && prevTime.isAfter(time.minus(2, ChronoUnit.SECONDS))) {
+        if (prevTime != null && time != null && prevTime
+                .isAfter(time.minus(2, ChronoUnit.SECONDS))) {
             log.debug("Skipping duplicate message!");
             return null;
         }

@@ -22,24 +22,20 @@ public class AsyncClient implements TopicalMessageReceiver, IMqttAsyncClient {
     private String mainTopic;
 
     @Delegate
-    private IMqttAsyncClient delegateClient;
+    private MqttAsyncClient delegateClient;
 
     /**
      * Constructs an instance of the delegateClient wrapper
      *
      * @param brokerUrl the url to connect to
      * @param clientId  the delegateClient id to connect with
-     * @param clean     clear state at end of connection or not (durable or non-durable subscriptions)
      * @param qos       the quality of service to delivery the message at (0,1,2)
-     * @param userName  the username to connect with
-     * @param password  the password for the user
      * @param tmpDir    the temporary directory to use for caching of inflight messages
      * @throws MqttException
      */
-    public AsyncClient(String brokerUrl, String clientId, boolean clean, int qos, String userName,
-            String password, String tmpDir, String mainTopic) {
+    public AsyncClient(String brokerUrl, String clientId, int qos, String tmpDir, String mainTopic) {
 
-        log.debug("Storing in-flight messages in " + tmpDir);
+        log.info("Storing in-flight messages in " + tmpDir);
         MqttClientPersistence dataStore = new MqttDefaultFilePersistence(tmpDir);
 
         this.mainTopic = mainTopic;
@@ -47,8 +43,7 @@ public class AsyncClient implements TopicalMessageReceiver, IMqttAsyncClient {
         try {
             delegateClient = createDelegateClient(brokerUrl, clientId, dataStore);
 
-            log.trace("Connecting to " + brokerUrl + " as " + clientId);
-            connect(userName, password, clean);
+            log.debug("Connecting to " + brokerUrl + " as " + clientId);
 
             publisher = new AsyncPublisher(this, qos);
 
@@ -79,11 +74,11 @@ public class AsyncClient implements TopicalMessageReceiver, IMqttAsyncClient {
         // testing only
     }
 
-    protected AsyncClient(IMqttAsyncClient client) {
+    protected AsyncClient(MqttAsyncClient client) {
         this.delegateClient = client;
     }
 
-    protected IMqttAsyncClient createDelegateClient(String brokerUrl, String clientId,
+    protected MqttAsyncClient createDelegateClient(String brokerUrl, String clientId,
             MqttClientPersistence dataStore) throws MqttException {
         MqttAsyncClient client = new MqttAsyncClient(brokerUrl, clientId, dataStore);
 
@@ -100,6 +95,7 @@ public class AsyncClient implements TopicalMessageReceiver, IMqttAsyncClient {
         MqttConnectOptions conOpt = new MqttConnectOptions();
         conOpt.setCleanSession(clean);
         conOpt.setAutomaticReconnect(true);
+        conOpt.setMaxInflight(1000);
 
         if (userName != null && !userName.equals("")) {
             conOpt.setUserName(userName);

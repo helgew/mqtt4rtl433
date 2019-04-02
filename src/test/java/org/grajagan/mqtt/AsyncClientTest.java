@@ -1,5 +1,7 @@
 package org.grajagan.mqtt;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
@@ -17,10 +19,17 @@ public class AsyncClientTest {
 
     @Test
     public void testConstructor() {
-        IMqttAsyncClient asyncClient =
-                new AsyncClient(BROKER_URL, Mqtt4Rtl433Main.DEFAULT_CLIENT_ID, true, 0, "", "",
+        AsyncClient asyncClient =
+                new AsyncClient(BROKER_URL, Mqtt4Rtl433Main.DEFAULT_CLIENT_ID, 0,
                         System.getProperty("java.io.tmpdir"),
                         Mqtt4Rtl433Main.DEFAULT_TOPIC + "/test");
+
+        try {
+            asyncClient.connect("", "", true);
+        } catch (MqttException e) {
+            throw new AssertionError(e);
+        }
+
         while (!asyncClient.isConnected()) {
             try {
                 Thread.sleep(10);
@@ -31,8 +40,8 @@ public class AsyncClientTest {
         }
 
         assertTrue("Client did not connect!", asyncClient.isConnected());
-        IMqttDeliveryToken token = null;
 
+        IMqttToken token;
         try {
             token = asyncClient
                     .publish(Mqtt4Rtl433Main.DEFAULT_TOPIC + "/test", "hello world".getBytes(), 0,
@@ -42,7 +51,6 @@ public class AsyncClientTest {
             throw new AssertionError(e);
         }
 
-        Assume.assumeNotNull(token);
         assertTrue(token.isComplete());
     }
 
@@ -62,7 +70,7 @@ public class AsyncClientTest {
 
     @Test
     public void testConnect() {
-        IMqttAsyncClient client = null;
+        MqttAsyncClient client = null;
         try {
             client = new MqttAsyncClient(BROKER_URL, Mqtt4Rtl433Main.DEFAULT_CLIENT_ID, null);
         } catch (MqttException e) {

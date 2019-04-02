@@ -9,30 +9,15 @@
         <Console name="CONSOLE" target="SYSTEM_OUT" follow="true">
             <PatternLayout pattern="${LOG_PATTERN}"/>
         </Console>
-
-        <RollingFile
-                name="FILE"
-                fileName="application.log"
-                filePattern="${LOG_DIR}/application.%d{yyyy-MM-dd}.log.gz"
-                ignoreExceptions="false">
-            <PatternLayout pattern="${LOG_PATTERN}"/>
-            <Policies>
-                <TimeBasedTriggeringPolicy/>
-            </Policies>
-            <DefaultRolloverStrategy max="5"/>
-        </RollingFile>
-
     </Appenders>
 
     <Loggers>
         <Logger name="org.grajagan" level="debug" additivity="false">
             <AppenderRef ref="CONSOLE"/>
-            <AppenderRef ref="FILE"/>
         </Logger>
 
         <Root level="info">
             <AppenderRef ref="CONSOLE"/>
-            <AppenderRef ref="FILE"/>
         </Root>
     </Loggers>
 
