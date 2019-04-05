@@ -178,8 +178,8 @@ public class Mqtt4Rtl433Main {
         } else {
             broker = (String) optionSet.valueOf("host");
             url = "tcp://" + broker + ":" + port;
-            userName = (String) optionSet.valueOf("host");
-            password = (String) optionSet.valueOf("host");
+            userName = (String) optionSet.valueOf("user");
+            password = (String) optionSet.valueOf("password");
             topic = (String) optionSet.valueOf("topic");
         }
 
@@ -217,7 +217,7 @@ public class Mqtt4Rtl433Main {
                     log.debug("Successfully connected!");
                 } catch (MqttSecurityException e) {
                     log.error("Unable to connect to " + broker + " as " + userName + " using "
-                            + " password\"" + password + "\"");
+                            + " password \"" + password + "\"");
                     System.exit(1);
                 } catch (MqttException e) {
                     if (e.getCause() != null && e.getCause() instanceof UnknownHostException) {
