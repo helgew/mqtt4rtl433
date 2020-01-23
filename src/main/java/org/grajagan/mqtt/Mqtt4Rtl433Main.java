@@ -38,7 +38,7 @@ import java.util.UUID;
 import static java.util.Arrays.asList;
 
 public class Mqtt4Rtl433Main {
-    public static final String DEFAULT_BROKER = "m2m.eclipse.org";
+    public static final String DEFAULT_BROKER = "test.mosquitto.org";
     public static final String DEFAULT_CLIENT_ID = "mqtt4rtl433_client";
     public static final String DEFAULT_TOPIC = "rtl433";
     public static final Integer DEFAULT_QOS = 2;
